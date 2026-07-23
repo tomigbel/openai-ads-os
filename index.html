@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Objection Handler / OpenAI Ads · Tomi Gbeleyi</title>
+<style>
+:root{
+  --ink:#F5F5F7;
+  --body:#C9C9CF;
+  --muted:#8E8EA0;
+  --green:#FFFFFF;
+  --line:#26262B;
+  --bg:#0D0D0D;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{background:var(--bg);scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#0D0D0D;color:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background:radial-gradient(700px 500px at 95% 0%,rgba(255,255,255,.05),transparent 60%)}
+.topband{height:34px;background:#000;border-bottom:1px solid #1E1E23}
+.hdr{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:20px 28px;flex-wrap:wrap}
+.pill{border:1px solid #2E2E34;background:#161619;border-radius:99px;padding:8px 17px;font-size:12px;color:var(--body);white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.pill.brand{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);font-weight:600}
+.wrap{display:grid;grid-template-columns:minmax(0,640px) minmax(200px,250px);gap:clamp(28px,4vw,56px);align-items:start;margin:0 24px 0 clamp(16px,7vw,190px);padding:40px 0 72px;position:relative}
+.main{min-width:0}
+.rail{position:sticky;top:32px;margin-top:26px;background:linear-gradient(#FFFFFF,#EFEFF2);border-radius:18px;padding:26px 24px;box-shadow:0 2px 8px rgba(0,0,0,.45),0 22px 54px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.9)}
+.rmono{width:40px;height:40px;border-radius:50%;background:#0D0D0D;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;margin-bottom:18px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.rail .ilabel{color:#6E6E80;margin-top:20px;padding-top:20px;border-top:1px solid #E4E4EA}
+.rail .rmono + .ilabel{margin-top:0;padding-top:0;border-top:0}
+.rail .ibody{font-size:13px;max-width:none;color:#40414F;margin-top:6px;line-height:1.65}
+.rail .ibody b{color:#0D0D0D}
+.rail .ilist{margin-top:10px}
+.rail .ilist li{font-size:12.5px;color:#40414F;padding:8px 0 8px 18px;line-height:1.55}
+.rail .ilist li::before{color:#0D0D0D;top:8px}
+.rail .ilist li{border-top:1px solid #ECECF0}
+.rail .ilist li:first-child{border-top:0}
+
+.eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--green);margin-bottom:10px}
+.roleline{font-size:13px;color:var(--muted);margin-bottom:26px}
+h1{color:var(--ink);font-size:38px;font-weight:700;letter-spacing:-.025em;line-height:1.1;margin-bottom:16px}
+.sub{font-size:15.5px;color:var(--body);max-width:50ch}
+
+.intro{border:1px solid #E2E2E8;border-left:3px solid var(--green);border-radius:12px;padding:18px 20px;margin-top:32px;background:#fff;box-shadow:0 1px 3px rgba(13,13,13,.05)}
+.igrid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.ilabel{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ibody{font-size:13.5px;color:var(--body);max-width:44ch}
+.ibody b{color:var(--ink)}
+.ilist{list-style:none;margin-top:8px}
+.ilist li{font-size:13px;color:var(--body);padding:5px 0 5px 16px;position:relative}
+.ilist li::before{content:"→";position:absolute;left:0;color:var(--green);font-weight:600}
+
+.demo{border:1px solid #2A2A30;border-radius:16px;padding:0;margin-top:22px;background:#141417;box-shadow:0 1px 2px rgba(0,0,0,.4),0 12px 34px rgba(0,0,0,.5);overflow:hidden}
+.dchrome{display:flex;align-items:center;gap:7px;padding:13px 18px;border-bottom:1px solid #26262B;background:linear-gradient(#1C1C21,#151518)}
+.cdot{width:10px;height:10px;border-radius:50%;background:#333338;box-shadow:inset 0 1px 1px rgba(0,0,0,.4)}
+.dtitle{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--muted);margin-left:8px;letter-spacing:.04em}
+.dbody{padding:20px 20px 16px}
+.dbar{display:flex;gap:10px}
+.dinput{flex:1;border:1px solid #2E2E34;border-radius:12px;padding:12px 16px;font-size:15px;color:var(--ink);background:#0F0F12;min-height:46px;box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}
+.dinput .caret{display:inline-block;width:1px;height:14px;background:var(--ink);vertical-align:-2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.gen{appearance:none;font:inherit;font-weight:600;font-size:14.5px;padding:12px 26px;border-radius:99px;background:linear-gradient(#FFFFFF,#EDEDEF);color:#0D0D0D;border:0;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+.gen:hover{background:#E4E4E8}
+#loading{display:none;padding:26px 4px 8px;color:var(--muted);font-size:14px}
+.dots::after{content:'';animation:dots 1.2s steps(4,end) infinite}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+.dnote{font-size:12px;color:var(--muted);margin-top:16px}
+
+.brief{display:none}
+.brief.show{display:block}
+.brief.show .bsec{opacity:0;animation:rise .45s ease forwards}
+.brief.show .bsec:nth-child(2){animation-delay:.15s}
+.brief.show .bsec:nth-child(3){animation-delay:.45s}
+.brief.show .bsec:nth-child(4){animation-delay:.75s}
+.brief.show .bsec:nth-child(5){animation-delay:1.05s}
+.brief.show .bsec:nth-child(6){animation-delay:1.35s}
+.brief.show .bsec:nth-child(7){animation-delay:1.65s}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.brief.show .bsec{animation:none;opacity:1}}
+
+.brief:not(.full) .bsec:nth-child(n+4){display:none}
+.brief.full .bsec:nth-child(4)::before{content:"Full report";display:block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--green);margin-bottom:10px}
+.morebtn{display:none;appearance:none;font:inherit;font-weight:600;font-size:13.5px;color:#E8E8EC;background:#1B1B20;border:1px solid #32323A;border-radius:99px;padding:11px 16px;cursor:pointer;width:100%;margin-top:12px}
+.morebtn:hover{border-color:#FFFFFF}
+.morebtn:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+.bhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:22px 4px 12px;flex-wrap:wrap}
+.bhead h2{color:var(--ink);font-size:20px;font-weight:700;letter-spacing:-.01em}
+.bhead span{font-size:13px;color:var(--muted)}
+.bsec{border:1px solid #28282E;border-radius:12px;background:#18181C;padding:15px 17px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.bsec:nth-child(3){background:linear-gradient(#222228,#1B1B20);border-color:#3A3A42;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.bsec:nth-child(3) .bnum{background:#33333B;color:#FFFFFF}
+.bnum{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;color:var(--muted);background:#232329;padding:2px 7px;border-radius:6px;letter-spacing:.06em;margin-right:8px;vertical-align:2px}
+.bsec h3{color:var(--ink);font-size:15px;font-weight:700;display:inline-block;margin-bottom:8px}
+.bsec p{font-size:14px;max-width:56ch}
+.ob{display:grid;grid-template-columns:86px 1fr;gap:5px 14px;font-size:14px}
+.ob dt{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.ob dd{max-width:52ch}
+.ob dd.say{color:var(--ink);font-weight:600;font-style:italic}
+.ob dd b{color:var(--ink)}
+
+.sec{border-top:1px solid var(--line);margin-top:52px;padding-top:40px}
+.slabel{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.sec h2{color:var(--ink);font-size:25px;font-weight:700;letter-spacing:-.015em;line-height:1.2;margin-bottom:12px;text-wrap:balance}
+.sec p{font-size:14.5px;max-width:56ch}
+
+.schema{display:grid;grid-template-columns:1fr 1fr;gap:2px 28px;margin-top:16px}
+.sch{padding:12px 0;border-top:1px solid var(--line)}
+.sch .bnum{margin-bottom:4px}
+.sch b{display:block;color:var(--ink);font-size:14px;margin-bottom:2px}
+.sch span{font-size:13px;color:var(--muted);line-height:1.5;display:block}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{appearance:none;font:inherit;font-size:13.5px;font-weight:600;color:#E8E8EC;background:#1B1B20;border:1px solid #32323A;border-radius:99px;padding:9px 18px;cursor:pointer;transition:border-color .15s,background .15s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.chip:hover{border-color:#FFFFFF;background:#232329}
+.chip.active{background:#FFFFFF;border-color:#FFFFFF;color:#0D0D0D}
+.chip:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+footer{border-top:1px solid var(--line);margin-top:52px;padding-top:22px;font-size:12.5px;color:var(--muted);line-height:1.7}
+footer b{color:var(--ink)}
+
+@media(max-width:1080px){
+  .wrap{grid-template-columns:1fr;gap:0;margin:0;padding:32px 20px 56px}
+  .rail{position:static;margin-top:28px}
+}
+@media(max-width:560px){
+  .hdr{padding:14px 16px}
+  .pill{white-space:normal;text-align:center}
+  .wrap{padding:24px 16px 48px}
+  h1{font-size:27px}
+  .sub{font-size:14.5px}
+  .schema,.igrid{grid-template-columns:1fr}
+  .ob{grid-template-columns:1fr;gap:2px 0}
+  .ob dt{padding-top:9px}
+  .dbar{flex-direction:column}
+  .gen{width:100%}
+  .dbody{padding:16px 14px 14px}
+  .bsec{padding:13px 14px}
+  .chips{gap:6px}
+  .chip{padding:8px 14px;font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<div class="topband"></div>
+<div class="hdr">
+  <span class="pill brand">Objection Handler / OpenAI Ads</span>
+  <span class="pill">Client Partner, Ads Solutions · Application by Tomi Gbeleyi</span>
+</div>
+
+<div class="wrap">
+
+<div class="main">
+
+<header>
+  <h1>You're looking at the prep tool<br>I'd run my book with.</h1>
+  <p class="sub">For my application to the Client Partner role, I figured it's better to show than tell. Objection Handler maps the objections advertisers are raising about ChatGPT ads, by vertical: what's true, the counter, the next step.</p>
+</header>
+
+<div class="demo" id="demo">
+  <div class="dchrome"><span class="cdot"></span><span class="cdot"></span><span class="cdot"></span><span class="dtitle">objection-handler · live demo</span></div>
+  <div class="dbody">
+  <div class="dbar">
+    <div class="dinput" id="dinput"><span id="typed"></span><span class="caret" id="caret"></span></div>
+    <button class="gen" id="genbtn">Generate</button>
+  </div>
+  <div class="chips" style="margin-top:12px">
+    <button class="chip" data-v="travel">Travel</button>
+    <button class="chip" data-v="retail">Retail &amp; Beauty</button>
+    <button class="chip" data-v="local">Local &amp; Delivery</button>
+    <button class="chip" data-v="fintech">Fintech</button>
+  </div>
+  <div id="loading"><span class="dots" id="loadtext">Mapping Travel</span></div>
+
+  <!-- TRAVEL -->
+  <div class="brief" id="v-travel">
+    <div class="bhead"><h2>Travel</h2><span>airlines, OTAs, hotels</span></div>
+    <div class="bsec"><div class="bnum">01</div><h3>The Room</h3>
+      <p>A VP of Performance who owns blended CAC, and a Head of Measurement with the veto. Interested, unconvinced, better at math than you.</p></div>
+    <div class="bsec"><div class="bnum">02</div><h3>Objection One</h3>
+      <dl class="ob">
+        <dt>They say</dt><dd class="say">"Attribution is unproven and the reporting is thinner than Google's."</dd>
+        <dt>What's true</dt><dd>It is, today.</dd>
+        <dt>The counter</dt><dd>Design the test on <b>their</b> incrementality framework, not our reporting.</dd>
+        <dt>Next step</dt><dd>Their measurement lead in meeting one, not meeting three.</dd>
+      </dl></div>
+    <div class="bsec"><div class="bnum">03</div><h3>Objection Two</h3>
+      <dl class="ob">
+        <dt>They say</dt><dd class="say">"By the time the ad shows up, the model already told the traveler what to book."</dd>
+        <dt>What's true</dt><dd>Sponsored slots render after the answer. Published design.</dd>
+        <dt>The counter</dt><dd>In travel the answer is a shortlist, and a shortlist is where a contender wins.</dd>
+        <dt>Next step</dt><dd>Build around comparison queries, not single-answer ones.</dd>
+      </dl></div>
+    <div class="bsec"><div class="bnum">04</div><h3>Objection Three</h3>
+      <dl class="ob">
+        <dt>They say</dt><dd class="say">"Our budgets are committed to Google and Meta."</dd>
+        <dt>What's true</dt><dd>Nobody unwinds core spend for an early platform.</dd>
+        <dt>The counter</dt><dd>The ask is experimental budget with a proof bar, not a reallocation.</dd>
+        <dt>Next step</dt><dd>Size it so finance can approve without touching the annual plan.</dd>
+      </dl></div>
+    <div class="bsec"><div class="bnum">05</div><h3>Test Structure</h3>
+      <p>Geo-holdout or cohort test. Incremental bookings and cohort CPA vs blended CAC. Scale gate agreed in writing.</p></div>
+    <div class="bsec"><div class="bnum">06</div><h3>The Close</h3>
+      <p>A 90-day cohort on their framework, exec review at day 45. Small enough for a yes, structured enough to scale.</p></div>
+  </div>
+
+  <!-- RETAIL -->
+  <div class="brief" id="v-retail">
+    <div class="bhead"><h2>Retail &amp; Beauty</h2><span>omnichannel, DTC</span></div>
+    <div class="bsec"><div class="bnum">01</div><h3>The Room</h3>
+      <p>A VP of Media and an eCommerce lead, with brand and legal one door down. Curious, brand-protective.</p></div>
+    <div class="bsec"><div class="bnum">02</div><h3>Objection One</h3>
+      <dl class="ob">
+        <dt>They say</dt><dd class="say">"An AI conversation is a brand-safety risk we can't control."</dd>
+        <dt>What's true</dt><dd>The bar should be high.</dd>
+        <dt>The counter</dt><dd>Ads are labeled and separate from answers; sensitive-conversation limits are published policy.</dd>
+        <dt>Next step</dt><dd>Do the policy walkthrough before they ask.</dd>
+      </dl></div>
+    <div class="bsec"><div class="bnum">03</div><h3>Objection Two</h3>
+      <dl class="ob">
+        <dt>They say</dt><dd class="say">"What if the model recommends against us and our ad sits under it?"</dd>
+        <dt>What's true</dt><dd>The answer is earned, not bought. As it should be.</dd>
+        <dt>The counter</dt><dd>Show up in comparison moments in categories you already win on merit.</dd>
+        <dt>Next step</dt><dd>The ad amplifies. It never argues.</dd>
+      </dl></div>
+    <div class="bsec"><div class="bnum">04</div><h3>Objection Three</h3>
+      <dl class="ob">
+        <dt>They say</dt><dd class="say">"Early click-through rates look weak next to search."</dd>
+        <dt>What's true</dt><dd>Early CTRs trail Google's. On record.</dd>
+        <dt>The counter</dt><dd>Measure assisted basket size and new-to-brand rate, not last-click.</dd>
+        <dt>Next step</dt><dd>Agree the metric set before launch, or the retro writes itself.</dd>
+      </dl></div>
+    <div class="bsec"><div class="bnum">05</div><h3>Test Structure</h3>
+      <p>Assisted-journey cohort vs a paid-social lookalike: new-customer CPA, basket size, loyalty signups.</p></div>
+    <div class="bsec"><div class="bnum">06</div><h3>The Close</h3>
+      <p>One category, 60 days, brand team in the room.</p></div>
+  </div>
+
+  <!-- LOCAL -->
+  <div class="brief" id="v-local">
+    <div class="bhead"><h2>Local &amp; Delivery</h2><span>marketplaces, on-demand</span></div>
+    <div class="bsec"><div class="bnum">01</div><h3>The Room</h3>
+      <p>A VP of Growth plus finance, at a company that runs its own ads platform. They'll out-math a weak pitch in ten minutes.</p></div>
+    <div class="bsec"><div class="bnum">02</div><h3>Objection One</h3>
+      <dl class="ob">
+        <dt>They say</dt><dd class="say">"Your CTR is lower than what we get on Google."</dd>
+        <dt>What's true</dt><dd>On early benchmarks, yes.</dd>
+        <dt>The counter</dt><dd>Judge the surface on CPA and incrementality, not CTR.</dd>
+        <dt>Next step</dt><dd>Offer the geo-holdout on day one.</dd>
+      </dl></div>
+    <div class="bsec"><div class="bnum">03</div><h3>Objection Two</h3>
+      <dl class="ob">
+        <dt>They say</dt><dd class="say">"Branded search already captures this demand."</dd>
+        <dt>What's true</dt><dd>Some of it, at a rising price.</dd>
+        <dt>The counter</dt><dd>A new surface is the cleanest read on what's truly incremental.</dd>
+        <dt>Next step</dt><dd>Frame it as the cannibalization audit finance already wants.</dd>
+      </dl></div>
+    <div class="bsec"><div class="bnum">04</div><h3>Objection Three</h3>
+      <dl class="ob">
+        <dt>They say</dt><dd class="say">"The tooling is rudimentary. Very few levers."</dd>
+        <dt>What's true</dt><dd>Fewer levers than Google Ads. No pretending.</dd>
+        <dt>The counter</dt><dd>The window is before the tooling matures and the auction fills.</dd>
+        <dt>Next step</dt><dd>Their product feedback becomes part of the deal.</dd>
+      </dl></div>
+    <div class="bsec"><div class="bnum">05</div><h3>Test Structure</h3>
+      <p>Geo-holdout, two matched metros: new-customer CPA, 90-day frequency, measured cannibalization.</p></div>
+    <div class="bsec"><div class="bnum">06</div><h3>The Close</h3>
+      <p>Six weeks, two metros, read together weekly. If the holdout works, scaling is a spreadsheet conversation.</p></div>
+  </div>
+
+  <!-- FINTECH -->
+  <div class="brief" id="v-fintech">
+    <div class="bhead"><h2>Fintech</h2><span>regulated categories</span></div>
+    <div class="bsec"><div class="bnum">01</div><h3>The Room</h3>
+      <p>Compliance first, CMO second, growth third. That ordering is the point.</p></div>
+    <div class="bsec"><div class="bnum">02</div><h3>Objection One</h3>
+      <dl class="ob">
+        <dt>They say</dt><dd class="say">"We can't risk a regulatory headline for an experimental channel."</dd>
+        <dt>What's true</dt><dd>Completely. No test is worth an enforcement letter.</dd>
+        <dt>The counter</dt><dd>Policy before commerce: cleared products, approved claims, then spend.</dd>
+        <dt>Next step</dt><dd>First meeting is compliance-to-policy, not sales-to-marketing.</dd>
+      </dl></div>
+    <div class="bsec"><div class="bnum">03</div><h3>Objection Two</h3>
+      <dl class="ob">
+        <dt>They say</dt><dd class="say">"AI answers about money are a minefield."</dd>
+        <dt>What's true</dt><dd>Money deserves the highest bar on any surface.</dd>
+        <dt>The counter</dt><dd>Answer-ad separation beats any keyword blocklist they run today.</dd>
+        <dt>Next step</dt><dd>Policy docs in their compliance file before the pitch deck.</dd>
+      </dl></div>
+    <div class="bsec"><div class="bnum">04</div><h3>Objection Three</h3>
+      <dl class="ob">
+        <dt>They say</dt><dd class="say">"The measurement is thin, and our audit trail needs more."</dd>
+        <dt>What's true</dt><dd>Reporting is early. Regulated advertisers need more.</dd>
+        <dt>The counter</dt><dd>Define the audit trail together; their requirements become the template.</dd>
+        <dt>Next step</dt><dd>Route them to the ads team as product feedback.</dd>
+      </dl></div>
+    <div class="bsec"><div class="bnum">05</div><h3>Test Structure</h3>
+      <p>Cleared-scope pilot, one product line. Metrics set after scope, not before.</p></div>
+    <div class="bsec"><div class="bnum">06</div><h3>The Close</h3>
+      <p>Two quarters: policy now, pilot next. How I built Google's regulated book from zero.</p></div>
+  </div>
+
+  <button class="morebtn" id="morebtn">Read the full report</button>
+  <div class="dnote">Live demo · auto-plays, no input required · the demo shows the room and the first objection; the full report adds two more, the test structure, and the close</div>
+  </div>
+</div>
+
+<footer>
+  Static mockup, pre-written from public reporting. No OpenAI advertiser relationships assumed or represented.<br>
+  <b>Tomi Gbeleyi</b> · tgbeleyi@gmail.com · linkedin.com/in/tomigbeleyi
+</footer>
+
+</div>
+
+<aside class="rail">
+  <div class="rmono">TG</div>
+  <div class="ilabel">Why I built it</div>
+  <p class="ibody">The skepticism about ChatGPT ads is public. Advertisers read it before every meeting. I sold into rooms like that at Google for five years.</p>
+  <div class="ilabel">Who built it</div>
+  <p class="ibody"><b>Tomi Gbeleyi</b><br>Toronto · Enterprise AE, CoLab AI</p>
+  <ul class="ilist">
+    <li>Google: sold ads to resistant, net-new advertisers. $28M quota to a $40M book at 120%.</li>
+    <li>Regulated-verticals ads GTM, zero to $10M+.</li>
+  </ul>
+</aside>
+
+</div>
+
+<script>
+const NAMES={travel:"Travel",retail:"Retail & Beauty",local:"Local & Delivery",fintech:"Fintech"};
+const typed=document.getElementById('typed');
+const loading=document.getElementById('loading');
+const loadtext=document.getElementById('loadtext');
+const briefs=document.querySelectorAll('.brief');
+const chips=document.querySelectorAll('.chip');
+const genbtn=document.getElementById('genbtn');
+const morebtn=document.getElementById('morebtn');
+let current='travel';
+let busy=false;
+
+function typeText(text,done){
+  typed.textContent='';
+  let i=0;
+  const t=setInterval(()=>{
+    typed.textContent=text.slice(0,++i);
+    if(i>=text.length){clearInterval(t);done&&done();}
+  },55);
+}
+
+function runBrief(v){
+  if(busy)return;
+  busy=true;
+  current=v;
+  chips.forEach(c=>c.classList.toggle('active',c.dataset.v===v));
+  briefs.forEach(b=>b.classList.remove('show','full'));
+  morebtn.style.display='none';
+  typeText(NAMES[v],()=>{
+    loadtext.textContent='Mapping '+NAMES[v];
+    loading.style.display='block';
+    setTimeout(()=>{
+      loading.style.display='none';
+      document.getElementById('v-'+v).classList.add('show');
+      morebtn.textContent='Read the full '+NAMES[v]+' report';
+      morebtn.style.display='block';
+      busy=false;
+    },900);
+  });
+}
+
+morebtn.addEventListener('click',()=>{
+  document.getElementById('v-'+current).classList.add('full');
+  morebtn.style.display='none';
+});
+
+genbtn.addEventListener('click',()=>runBrief(current));
+chips.forEach(c=>c.addEventListener('click',()=>{
+  document.getElementById('demo').scrollIntoView({behavior:'smooth',block:'start'});
+  runBrief(c.dataset.v);
+}));
+
+// Live demo auto-plays on load
+setTimeout(()=>runBrief('travel'),700);
+</script>
+
+</body>
+</html>
